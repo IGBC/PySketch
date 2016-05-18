@@ -44,14 +44,19 @@ if __name__ == "__main__":
 
     # Catching errors here appears to be impossible, as the inner engine throws it ignoring a try/catch
     # So let it throw them, as it spits useful information to the user anyway
-    sketch = SourceFileLoader("sketch", module_path).load_module()
+    try:
+        sketch = SourceFileLoader("sketch", module_path).load_module()
+    except ImportError:
+        print("there was an import error")
+    except:
+        print("there was a different error")
 
     # Forcibly jam the interpreters libraries down the sketches throat
     setattr(sketch, "sys", sys)
     setattr(sketch, "time", time)
     setattr(sketch, "GPIO", GPIO)
 
-    # Try to execute setup function if it doesn't exist no one cares, just run the loop.
+
     try:
         sketch.setup(sys.argv[2:])
     except AttributeError:
