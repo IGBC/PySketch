@@ -106,3 +106,4 @@ fabric.properties
 
 #Ipython Notebook
 .ipynb_checkpoints
+/.idea/
