@@ -4,7 +4,7 @@ Interpreter for Arduino style python sketches
 PySketch is an interpreter for python "sketches". The name sketch is taken from the short C programs that the Arduino IDE complies and uploads to Ardunio devices. Arduino sketches have a fixed format: a `setup()` function that is run once and a `loop()` function that is then run repeatedly forever. This format makes it easy to start writing simple C applications to control the device. 
 
 PySketch uses the same format, allowing you to write simple programs to perform every day tasks, for example controlling a Raspberry Pi's GPIO, with almost no boilerplate code. The best way to demonstrate this is probably with an example. Read the comments for explanation:
-```
+```python
 #!/usr/bin/pysketch
 
 # Blinky.py - Sketch to blink an LED on an RPi
@@ -23,7 +23,7 @@ def cleanup() # This is called at the end, regardless of how loop() exits, even 
 ```
   
 Now look at the equivalent vanilla python:
-```
+```python
 #!/usr/bin/python3
 
 # Blinky.py - Script to blink an LED on an RPi
