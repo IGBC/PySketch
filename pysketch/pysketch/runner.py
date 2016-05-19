@@ -17,16 +17,18 @@ class SketchRunner:
 
     def add_library_item(self, item):
         # Check argument is desired type
-        assert isinstance(item, types.string)
+        assert isinstance(item, str)
         self.__library_list.append(item)
 
     def add_default_library(self):
-        self.__library_list.append(['sys', 'time', 'RPi.GPIO'])
+        self.__library_list.append('sys')
+        self.__library_list.append('time')
+        #self.__library_list.append('RPi.GPIO')
         # Todo: Read this in from a file or something
 
     def set_sketch(self, sketch):
         # Check argument is desired type
-        assert isinstance(sketch, types.string)
+        assert isinstance(sketch, str)
 
         module_path = os.path.abspath(sketch)
 
@@ -82,11 +84,12 @@ class SketchRunner:
 
         # catch manual break.
         except KeyboardInterrupt:
-            print("Keyboard Interrupt: Exiting")
+            raise
 
         # If function doesn't exist catch interpreter gibbering and print meaningful error message
         except AttributeError:
-            print("No \"loop()\" Function found. Exiting")
+            # Handle this at the program level please
+            raise
 
         # Any other error must be sent to the user.
         except:

@@ -1,4 +1,7 @@
 #!/usr/bin/python3
 
-import pysketch
-# todo: stuff
+import sys
+import pysketch.pysketch
+
+if __name__ == "__main__":
+    exit(pysketch.pysketch.interpreter(sys.argv[1:]))
