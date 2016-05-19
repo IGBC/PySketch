@@ -23,7 +23,7 @@ class SketchRunner:
     def add_default_library(self):
         self.__library_list.append('sys')
         self.__library_list.append('time')
-        #self.__library_list.append('RPi.GPIO')
+        self.__library_list.append('RPi.GPIO')
         # Todo: Read this in from a file or something
 
     def set_sketch(self, sketch):
@@ -57,7 +57,23 @@ class SketchRunner:
         for list_item in self.__library_list:
 
             # Import the module Named in the string
-            module = importlib.import_module(list_item)
+            module = None
+            try:
+                module = importlib.import_module(list_item)
+
+            # Hardcoded GPIO Hack
+            except ImportError:
+                if list_item == "RPi.GPIO":
+                    from pysketch.pysketch import fakeGPIO
+                    module = fakeGPIO
+                    print("RPi.GPIO not available, you may not be running on a Pi compatible device."
+                          " \nGPIO functions have been masked with stubs, so sketches can continue to function.\n")
+                else:
+                    raise
+            if list_item == "RPi.GPIO":
+                setattr(self.__sketch, "GPIO", module)
+            # End Hack
+
             # Cram the module into the sketch in the form of module -> "list_item", as the two are the same
             # the module matches the name, AKA the same as `import module as list_item`
             setattr(self.__sketch, list_item, module)
