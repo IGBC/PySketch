@@ -10,15 +10,15 @@ PySketch uses the same format, allowing you to write simple programs to perform 
 # Blinky.py - Sketch to blink an LED on an RPi
 # This script assumes you have an LED connected from pin 12 to GND. (Via a resistor plz)
 
-def setup(argv) # This code is automatically executed when the sketch starts.
+def setup(argv): # This code is automatically executed when the sketch starts.
   GPIO.setmode(GPIO.BCM) # The RPi.GPIO Library is automatically loaded in.
   GPIO.setup(18, GPIO.OUT) 
   
-def loop() # This Code runs in a loop until it calls exit() or crashes or a keyboardInterrupt event is fired.
+def loop(): # This Code runs in a loop until it calls exit() or crashes or a keyboardInterrupt event is fired.
   GPIO.output(18, 1 - GPIO.input(18))
   time.sleep(1) # time automatically loaded in.
   
-def cleanup() # This is called at the end, regardless of how loop() exits, even if it crashes.
+def cleanup(): # This is called at the end, regardless of how loop() exits, even if it crashes.
   GPIO.cleanup()
 ```
   
