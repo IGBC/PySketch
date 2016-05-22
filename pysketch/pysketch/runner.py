@@ -41,7 +41,7 @@ class SketchRunner:
 
         # Catching errors here appears to be impossible, as the inner engine throws it ignoring a try/catch
         # So let it throw them, as it spits useful information to the user anyway
-        sketch = SourceFileLoader("sketch", module_path).load_module()
+        sketch = SourceFileLoader("__sketch", module_path).load_module()
 
         assert isinstance(sketch, types.ModuleType)
 
@@ -50,8 +50,8 @@ class SketchRunner:
         self.__sketch = sketch
 
     def __register_library(self):
-        """Inserts Interpreter Library of imports into sketch in a very non-consensual way"""
-        # Verify that sketch exists, and is a module
+        """Inserts Interpreter Library of imports into __sketch in a very non-consensual way"""
+        # Verify that __sketch exists, and is a module
         assert isinstance(self.__sketch, types.ModuleType)
 
         for list_item in self.__library_list:
@@ -64,7 +64,7 @@ class SketchRunner:
             # Hardcoded GPIO Hack
             except ImportError:
                 if list_item == "RPi.GPIO":
-                    from pysketch.pysketch import fakeGPIO
+                    from pysketch import fakeGPIO
                     module = fakeGPIO
                     print("RPi.GPIO not available, you may not be running on a Pi compatible device."
                           " \nGPIO functions have been masked with stubs, so sketches can continue to function.\n")
@@ -74,12 +74,12 @@ class SketchRunner:
                 setattr(self.__sketch, "GPIO", module)
             # End Hack
 
-            # Cram the module into the sketch in the form of module -> "list_item", as the two are the same
+            # Cram the module into the __sketch in the form of module -> "list_item", as the two are the same
             # the module matches the name, AKA the same as `import module as list_item`
             setattr(self.__sketch, list_item, module)
 
     def run(self, args):
-        # Verify that sketch exists, and is a module
+        # Verify that __sketch exists, and is a module
         assert isinstance(self.__sketch, types.ModuleType)
 
         # Register the import library pre_execute.
