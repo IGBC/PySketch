@@ -3,7 +3,7 @@ from .runner import SketchRunner as SketchRunner
 
 def interpreter(args):
     if len(args) == 0:
-        print('Usage: \n   sketch_runner.py "sketch filename" [arguments for sketch] \n   Add'
+        print('Usage: \n   sketch_runner.py "__sketch filename" [arguments for __sketch] \n   Add'
               ' "#!/path/to/sketch_runner.py" to sketches to make them executable')
         return -2
 

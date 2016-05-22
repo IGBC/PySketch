@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import sys
-import pysketch.pysketch
+import pysketch
 
 if __name__ == "__main__":
-    exit(pysketch.pysketch.interpreter(sys.argv[1:]))
+    exit(pysketch.interpreter(sys.argv[1:]))
