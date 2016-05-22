@@ -4,4 +4,4 @@ import sys
 import pysketch
 
 if __name__ == "__main__":
-    exit(pysketch.interpreter(sys.argv[1:]))
+    exit(pysketch.Interpreter(sys.argv[1:]))

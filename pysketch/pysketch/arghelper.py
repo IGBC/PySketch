@@ -27,12 +27,20 @@ class ArgChecker:
 
         spec = inspect.getargspec(setup_function)
 
-        # If there are no variable length arguments
-        if spec.varargs is None & spec.keywords is None:
-            self.max_args = len(spec.args)
-            self.min_args = len(spec.args) - len(spec.defaults)
+        args = []
+        if spec.args is not None:
+            args = spec.args
+
+        defaults = []
+        if spec.defaults is not None:
+            defaults = spec.defaults
+
+            # If there are no variable length arguments
+        if (spec.varargs is None) and (spec.keywords is None):
+            self.max_args = len(args)
+            self.min_args = len(args) - len(defaults)
         else:
-            self.min_args = len(spec.args) - len(spec.defaults)
+            self.min_args = len(args) - len(defaults)
 
     def verify_arg_count(self, args):
         """

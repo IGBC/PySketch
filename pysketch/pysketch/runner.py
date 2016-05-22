@@ -1,19 +1,20 @@
-import os
 import types
 import importlib
-from importlib.machinery import SourceFileLoader
 
 
 class SketchRunner:
     __library_list = []
     __sketch = None
     __file_path = None
+    __argChecker = None
 
     def __init__(self, sketch=None, default_library=False):
         if default_library:
             self.add_default_library()
         if sketch:
             self.set_sketch(sketch)
+
+        # Init Arg Checker
 
     def add_library_item(self, item):
         # Check argument is desired type
@@ -28,25 +29,9 @@ class SketchRunner:
 
     def set_sketch(self, sketch):
         # Check argument is desired type
-        assert isinstance(sketch, str)
-
-        module_path = os.path.abspath(sketch)
-
-        # Check file exists and is valid
-        if not os.path.exists(module_path):
-            raise FileNotFoundError
-
-        if not os.path.isfile(module_path):
-            raise IsADirectoryError
-
-        # Catching errors here appears to be impossible, as the inner engine throws it ignoring a try/catch
-        # So let it throw them, as it spits useful information to the user anyway
-        sketch = SourceFileLoader("__sketch", module_path).load_module()
-
         assert isinstance(sketch, types.ModuleType)
 
         # if we got here then everything has passed and we can safely save data into the class
-        self.__file_path = module_path
         self.__sketch = sketch
 
     def __register_library(self):
@@ -87,7 +72,7 @@ class SketchRunner:
 
         # Try to execute setup function if it doesn't exist no one cares, just run the loop.
         try:
-            self.__sketch.setup(args)
+            self.__sketch.setup(*args)
         except AttributeError:
             pass
         # Any other error must be sent to the user.
