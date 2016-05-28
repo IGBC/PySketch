@@ -89,8 +89,8 @@ class SketchRunner:
 
         # If function doesn't exist catch interpreter gibbering and print meaningful error message
         except AttributeError:
-            # Handle this at the program level please
-            raise
+            # The Loop function is optional
+            pass
 
         # Any other error must be sent to the user.
         except:
