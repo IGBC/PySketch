@@ -1,0 +1,7 @@
+#!/usr/bin/python3
+
+import sys
+import sketches
+
+if __name__ == "__main__":
+    exit(sketches.Interpreter(sys.argv[1:]))
