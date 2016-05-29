@@ -1,16 +1,14 @@
 from distutils.core import setup
+from pypandoc import convert
 
-try:
-    from pypandoc import convert
-    read_md = lambda f: convert(f, 'rst')
-except ImportError:
-    print("warning: pypandoc module not found, could not convert Markdown to RST")
-    read_md = lambda f: open(f, 'r').read()
+
+def read_md(file):
+    convert(file, 'rst')
 
 setup(
-    name='pysketch',
+    name='sketches',
     version='0.1',
-    packages=['pysketch'],
+    packages=['sketches'],
     url='https://github.com/IGBC/PySketch',
     license='GPL V3.0',
     author='SEGFAULT',
