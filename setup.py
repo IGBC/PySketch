@@ -1,12 +1,9 @@
+import os
 from distutils.core import setup
-from pypandoc import convert
 
 
-def read_md(file):
-    text = convert(file, 'rst')
-    print("RST: " + text)
-    return text
-
+def read_desc(filename):
+    return open(os.path.join(os.path.dirname(__file__), filename)).read()
 
 setup(
     name='sketches',
@@ -29,5 +26,5 @@ setup(
     author='IGBC',
     author_email='segfault@c-base.org',
     description='Write Arduino style sketches in Python',
-    long_description=read_md("../README.md"),
+    long_description=read_desc("README.rst"),
 )
