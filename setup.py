@@ -7,7 +7,7 @@ def read_desc(filename):
 
 setup(
     name='sketches',
-    version='0.1.0.1',
+    version='0.0.1',
     packages=['sketches'],
     scripts=['bin/pysketch'],
     url='https://github.com/IGBC/PySketch',
