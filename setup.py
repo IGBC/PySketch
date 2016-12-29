@@ -2,12 +2,9 @@ import os
 from distutils.core import setup
 
 
-def read_desc(filename):
-    return open(os.path.join(os.path.dirname(__file__), filename)).read()
-
 setup(
     name='sketches',
-    version='0.0.1',
+    version='0.0.2',
     packages=['sketches'],
     scripts=['bin/pysketch'],
     url='https://github.com/IGBC/PySketch',
@@ -26,5 +23,5 @@ setup(
     author='IGBC',
     author_email='segfault@c-base.org',
     description='Write Arduino style sketches in Python',
-    long_description=read_desc("README.rst"),
+    long_description='Write Arduino style sketches in Python\nSee: https://github.com/IGBC/PySketch',
 )
