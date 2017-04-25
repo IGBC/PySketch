@@ -4,50 +4,62 @@ from .moduleloader import ModuleLoader
 from .arghelper import ArgChecker
 
 
-class Interpreter:
+def main():
+    helptext = ('PySketch - Write easy sketches in python.\n'
+                '\n'
+                'Usage:\n'
+                '  pysketch (sketchfile) [sketch arguments]\n'
+                '  pysketch --help\n'
+                '  pysketch --version\n'
+                '\n'
+                'Options:\n'
+                '  --help    Show this screen.\n'
+                '  --version     Show version.\n'
+                '\n'
+                'Add "#!/usr/bin/env pysketch" to a sketchfile make it callable'
+               )
+    
+    args = sys.argv[1:]
+    # Check a sketch is listed
+    if len(args) == 0:
+        print(helptext)
+        exit()
+
+    if args[0] == "--help":
+        print(helptext)
+        exit()
+
+    if args[0] == "--version":
+        print("TODO: Read Version" + " pre-alpha")
+        exit()
+
+    print("Loading " + args[0])
     loader = None
-    checker = None
-    args = []
+    try:
+        loader = ModuleLoader(args[0])
+    except FileNotFoundError:
+        print(args[0] + " not found")
+        exit()
+    except IsADirectoryError:
+        print(args[0] + " is a directory")
+        exit()    
 
-    def __init__(self):
-        args = sys.argv[1:]
-        # Check a sketch is listed
-        if len(args) == 0:
-            print('Usage: \n   sketch_runner.py "__sketch filename" [arguments for __sketch] \n   Add'
-                  ' "#!/usr/bin/env pysketch" to sketches to make them executable')
-            exit()
+    print("Parsing Arguments")
+    args = args[1:]
+    checker = ArgChecker(loader.sketch)
+    args = args[:checker.max_args]
+    if not checker.verify_arg_count(args):
+        print("Insufficient Arguments Supplied: Exiting")
+        exit()
+    return_val = -1
+    try:
+        runner = SketchRunner(sketch=loader.sketch, default_library=True)
+        print("Running Sketch")
+        runner.run(args)
+        return_val = 0
+    except AttributeError:
+        print("No \"loop()\" Function found: Exiting")
+    except KeyboardInterrupt:
+        print("Keyboard Interrupt: Exiting")
+    return return_val
 
-        print("Loading " + args[0])
-        self.__load_file(args[0])
-        print("Parsing Arguments")
-        self.__fix_args(args[1:])
-        self.__run()
-
-    def __load_file(self, file):
-        try:
-            self.loader = ModuleLoader(file)
-        except FileNotFoundError:
-            print(file + " not found \n")
-        except IsADirectoryError:
-            print(file + " is a directory \n")
-
-    def __fix_args(self, args):
-        assert isinstance(args, list)
-        self.checker = ArgChecker(self.loader.sketch)
-        self.args = args[:self.checker.max_args]
-        if not self.checker.verify_arg_count(self.args):
-            print("Insufficient Arguments Supplied: Exiting")
-            exit()
-
-    def __run(self):
-        return_val = -1
-        try:
-            runner = SketchRunner(sketch=self.loader.sketch, default_library=True)
-            print("Running Sketch \n")
-            runner.run(self.args)
-            return_val = 0
-        except AttributeError:
-            print("No \"loop()\" Function found: Exiting")
-        except KeyboardInterrupt:
-            print("Keyboard Interrupt: Exiting")
-        return return_val

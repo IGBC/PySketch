@@ -6,7 +6,7 @@ setup(
     version='0.0.2',
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     entry_points = {
-        'console_scripts': ['pysketch=sketches:Interpreter'],
+        'console_scripts': ['pysketch=sketches:main'],
     },
     url='https://github.com/IGBC/PySketch',
     # license='GPL V3.0',
