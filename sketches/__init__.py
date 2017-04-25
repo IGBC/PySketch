@@ -1,3 +1,4 @@
+import sys
 from .runner import SketchRunner
 from .moduleloader import ModuleLoader
 from .arghelper import ArgChecker
@@ -8,11 +9,12 @@ class Interpreter:
     checker = None
     args = []
 
-    def __init__(self, args):
+    def __init__(self):
+        args = sys.argv[1:]
         # Check a sketch is listed
         if len(args) == 0:
             print('Usage: \n   sketch_runner.py "__sketch filename" [arguments for __sketch] \n   Add'
-                  ' "#!/path/to/sketch_runner.py" to sketches to make them executable')
+                  ' "#!/usr/bin/env pysketch" to sketches to make them executable')
             exit()
 
         print("Loading " + args[0])

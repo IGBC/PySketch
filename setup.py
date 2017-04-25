@@ -1,12 +1,13 @@
-import os
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 
 setup(
     name='sketches',
     version='0.0.2',
-    packages=['sketches'],
-    scripts=['bin/pysketch'],
+    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    entry_points = {
+        'console_scripts': ['pysketch=sketches:Interpreter'],
+    },
     url='https://github.com/IGBC/PySketch',
     # license='GPL V3.0',
     classifiers=['Development Status :: 2 - Pre-Alpha',
