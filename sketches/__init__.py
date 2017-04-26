@@ -3,7 +3,6 @@ from .runner import SketchRunner
 from .moduleloader import ModuleLoader
 from .arghelper import ArgChecker
 
-
 def main():
     helptext = ('PySketch - Write easy sketches in python.\n'
                 '\n'
@@ -25,11 +24,11 @@ def main():
         print(helptext)
         exit()
 
-    if args[0] == "--help":
+    if "--help" in args:
         print(helptext)
         exit()
 
-    if args[0] == "--version":
+    if "--version" in args:
         print("TODO: Read Version" + " pre-alpha")
         exit()
 
@@ -53,7 +52,7 @@ def main():
         exit()
     return_val = -1
     try:
-        runner = SketchRunner(sketch=loader.sketch, default_library=True)
+        runner = SketchRunner(sketch=loader.sketch)
         print("Running Sketch")
         runner.run(args)
         return_val = 0
