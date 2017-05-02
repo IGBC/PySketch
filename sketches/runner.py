@@ -1,34 +1,33 @@
 import importlib
 from types import ModuleType
-from typing import List
+from typing import List, Tuple
 
 
 class SketchRunner:
 
-    __default_package_list = ['sys', 'time', 'math', 'RPi.GPIO']
+    __default_package_list = [('sys', 'sys'), ('time', 'time'), ('math', 'math'), ('RPi.GPIO', 'GPIO')]
 
-    def __init__(self, sketch: ModuleType, imports: List[str] = __default_package_list):
+    def __init__(self, sketch: ModuleType, imports: List[Tuple[str, str]] = __default_package_list):
         # Check argument is desired type
         if not isinstance(sketch, ModuleType):
             raise AttributeError
         self.__sketch = sketch
 
         for item in imports:
-            self.__register_library(item)
+            self.__register_library(item[0], item[1])
 
-    def __register_library(self, item: str):
+    def __register_library(self, module_name: str, attr: str):
         """Inserts Interpreter Library of imports into sketch in a very non-consensual way"""
 
         # Import the module Named in the string
-        module = None
         try:
-            module = importlib.import_module(item)
+            module = importlib.import_module(module_name)
 
         # Hardcoded GPIO Hack
         # If module is not found it checks if it is the RPi.GPIO module. (Not available on PC's)
         # If it is then it substitutes it for a fake stub version, just so that the code can run
         except ImportError:
-            if item == "RPi.GPIO":
+            if module_name == "RPi.GPIO":
                 from sketches import fakeGPIO
                 module = fakeGPIO
                 print("\nRPi.GPIO not available, you may not be running on a Pi compatible device."
@@ -38,15 +37,12 @@ class SketchRunner:
             # Doesn't exist.
                 raise
 
-        # This hack fakes around "import RPi.GPIO as GPIO" which is what all the GPIO demos (and thus everyone else)
-        # does. If you can't beat 'em join 'em
-        if item == "RPi.GPIO":
-            setattr(self.__sketch, "GPIO", module)
-        # End Hack
-
-        # Cram the module into the __sketch in the form of module -> "item", as the two are the same
-        # the module matches the name, AKA the same as `import module as item`
-        setattr(self.__sketch, item, module)
+        # Cram the module into the __sketch in the form of module -> "attr"
+        # AKA the same as `import module as attr`
+        if not attr in dir(self.__sketch):
+            setattr(self.__sketch, attr, module)
+        else:
+            print("\n"+ attr +" could not be imported as it's label is already used in the sketch")
 
     def run(self, args):
         # Try to execute setup function if it doesn't exist no one cares, just run the loop.

@@ -1,14 +1,15 @@
 #!/usr/bin/env pysketch
 
-i = 0
+sys = 0
 
 def setup(arg):
     print("setup("+arg+")")
+    print(dir())
 
 def loop():
-    global i
-    i = i + 1
-    print("loop: " + str(i))
+    global sys
+    sys = sys + 1
+    print("loop: " + str(sys))
     time.sleep(1)
 
 def cleanup():
