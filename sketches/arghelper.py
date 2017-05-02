@@ -5,56 +5,45 @@ Module for ArgChecker Class
 """
 
 import inspect
-import types
+from types import ModuleType
 
 
 class ArgChecker:
     """
     Class for checking arguments of a sketch.
     """
-    __sketch = None
-    min_args = 0
-    max_args = None
 
-    def __init__(self, sketch):
-        assert isinstance(sketch, types.ModuleType)
-        self.__sketch = sketch
-        try:
-            setup_function = sketch.setup
-        except AttributeError:
-            # setup function is optional so just return
-            return
+    def __init__(self, sketch: ModuleType):
+        if 'setup' in dir(sketch):
+            spec = inspect.getargspec(sketch.setup)
 
-        spec = inspect.getargspec(setup_function)
+            args = []
+            if spec.args is not None:
+                args = spec.args
 
-        args = []
-        if spec.args is not None:
-            args = spec.args
-
-        defaults = []
-        if spec.defaults is not None:
-            defaults = spec.defaults
+            defaults = []
+            if spec.defaults is not None:
+                defaults = spec.defaults
 
             # If there are no variable length arguments
-        if (spec.varargs is None) and (spec.keywords is None):
-            self.max_args = len(args)
-            self.min_args = len(args) - len(defaults)
+            if spec.varargs is None and spec.keywords is None:
+                self.max_args = len(args)
+                self.min_args = len(args) - len(defaults)
+            else:
+                self.max_args = None
+                self.min_args = len(args) - len(defaults)
         else:
-            self.min_args = len(args) - len(defaults)
+            # No setup function means min an max args are both 0
+            self.max_args = 0
+            self.min_args = 0
 
-    def verify_arg_count(self, args):
+    def verify_arg_count(self, args: int):
         """
         Returns whether number of arguments supplied is correct for sketch.
+
         :param args: either list of args or int, to be assessed.
         :return: True if len(args) or int is appropriate for sketch.
         """
-
-        # Convert list into its length
-        if isinstance(args, list):
-            args = len(args)
-
-        # Verify that we now have an int
-        assert isinstance(args, int)
 
         # Calculate and return answer
         if self.max_args is None:

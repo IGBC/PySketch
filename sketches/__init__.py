@@ -1,7 +1,9 @@
 import sys
+
 from .runner import SketchRunner
-from .moduleloader import ModuleLoader
+from .moduleloader import module_loader
 from .arghelper import ArgChecker
+
 
 def main():
     helptext = ('PySketch - Write easy sketches in python.\n'
@@ -17,48 +19,40 @@ def main():
                 '\n'
                 'Add "#!/usr/bin/env pysketch" to a sketchfile make it callable'
                )
-    
+
     args = sys.argv[1:]
     # Check a sketch is listed
     if len(args) == 0:
         print(helptext)
-        exit()
 
-    if "--help" in args:
+    elif "--help" in args:
         print(helptext)
-        exit()
 
-    if "--version" in args:
+    elif "--version" in args:
         print("TODO: Read Version" + " pre-alpha")
-        exit()
 
-    print("Loading " + args[0])
-    loader = None
-    try:
-        loader = ModuleLoader(args[0])
-    except FileNotFoundError:
-        print(args[0] + " not found")
-        exit()
-    except IsADirectoryError:
-        print(args[0] + " is a directory")
-        exit()    
+    else:
+        # Load File
+        filename = args[0]
 
-    print("Parsing Arguments")
-    args = args[1:]
-    checker = ArgChecker(loader.sketch)
-    args = args[:checker.max_args]
-    if not checker.verify_arg_count(args):
-        print("Insufficient Arguments Supplied: Exiting")
-        exit()
-    return_val = -1
-    try:
-        runner = SketchRunner(sketch=loader.sketch)
+        print("Loading " + filename)
+        try:
+            sketch = module_loader(filename)
+        except FileNotFoundError:
+            exit(filename + " not found")
+        except IsADirectoryError:
+            exit(filename + " is a directory")
+
+        #Check Argument Count (to sketch)
+        print("Parsing Arguments")
+        args = args[1:]
+        checker = ArgChecker(sketch)
+        args = args[:checker.max_args]
+        if not checker.verify_arg_count(len(args)):
+            exit("Insufficient Arguments Supplied: Exiting")
+
+        # Run
+        runner = SketchRunner(sketch=sketch)
         print("Running Sketch")
         runner.run(args)
-        return_val = 0
-    except AttributeError:
-        print("No \"loop()\" Function found: Exiting")
-    except KeyboardInterrupt:
-        print("Keyboard Interrupt: Exiting")
-    return return_val
 
