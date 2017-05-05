@@ -2,7 +2,6 @@ import sys
 
 from .runner import SketchRunner
 from .moduleloader import module_loader
-from .arghelper import ArgChecker
 
 
 def main():
@@ -34,25 +33,21 @@ def main():
     else:
         # Load File
         filename = args[0]
-
+        params = args[1:]
+		
         print("Loading " + filename)
         try:
             sketch = module_loader(filename)
         except FileNotFoundError:
-            exit(filename + " not found")
-        except IsADirectoryError:
-            exit(filename + " is a directory")
+            exit("Could not load " + filename)
 
-        #Check Argument Count (to sketch)
-        print("Parsing Arguments")
-        args = args[1:]
-        checker = ArgChecker(sketch)
-        args = args[:checker.max_args]
-        if not checker.verify_arg_count(len(args)):
-            exit("Insufficient Arguments Supplied: Exiting")
-
-        # Run
         runner = SketchRunner(sketch=sketch)
-        print("Running Sketch")
-        runner.run(args)
+        #Check Argument Count (to sketch)
+        if len(params) < runner.min_args:
+            exit("Insufficient Arguments Supplied: Exiting")
+        if len(params) > runner.max_args:
+            exit("Excess Arguments Supplied: Exiting")
+        # Run
+        print("Running Sketch:")
+        runner.run(params)
 

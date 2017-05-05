@@ -1,3 +1,4 @@
+import inspect
 import importlib
 from types import ModuleType
 from typing import List, Tuple
@@ -13,6 +14,31 @@ class SketchRunner:
             raise AttributeError
         self.__sketch = sketch
 
+        # get setup function and argument count
+        if 'setup' in dir(sketch):
+            spec = inspect.getargspec(sketch.setup)
+
+            args = []
+            if spec.args is not None:
+                args = spec.args
+
+            defaults = []
+            if spec.defaults is not None:
+                defaults = spec.defaults
+
+            # If there are no variable length arguments
+            if spec.varargs is None and spec.keywords is None:
+                self.max_args = len(args)
+                self.min_args = len(args) - len(defaults)
+            else:
+                self.max_args = None
+                self.min_args = len(args) - len(defaults)
+        else:
+            # No setup function means min an max args are both 0
+            self.max_args = 0
+            self.min_args = 0
+
+        # Register library imports into sketch
         for item in imports:
             self.__register_library(item[0], item[1])
 
@@ -48,7 +74,6 @@ class SketchRunner:
         # Try to execute setup function if it doesn't exist no one cares, just run the loop.
         if 'setup' in dir(self.__sketch):
             self.__sketch.setup(*args)
-
         try:
             if 'loop' in dir(self.__sketch):
                 while True:
