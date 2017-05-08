@@ -7,33 +7,35 @@ from typing import List, Tuple
 
 
 class SketchRunner:
-    __default_package_list = [('sys', 'sys'), ('time', 'time'), ('math', 'math'), ('RPi.GPIO', 'GPIO')]
+    __default_package_list = [('sys', 'sys'), ('time', 'time'), ('math', 'math'), ('RPi.GPIO', 'GPIO','sketches.fakeGPIO')]
 
-    def __init__(self, sketch: ModuleType, imports: List[Tuple[str, str]] = __default_package_list):
-        # Check argument is desired type
-        if not isinstance(sketch, ModuleType):
-            raise AttributeError
-        self.__sketch = sketch
+    def __init__(self, filename: str, imports: List[Tuple[str, str]] = __default_package_list):
+        module_path = path.abspath(filename)
 
+        # Check file exists and is valid
+        if not path.isfile(module_path):
+            raise FileNotFoundError
+
+        self.__sketch = importlib.machinery.SourceFileLoader("sketch", module_path).load_module()
+        
         # get setup function and argument count
-        if 'setup' in dir(sketch):
-            spec = inspect.getargspec(sketch.setup)
+        if 'setup' in dir(self.__sketch):
+            spec = inspect.getfullargspec(self.__sketch.setup)
+            args = spec.args
+            defaults = spec.defaults
+            
+            if args is None:
+                args = []
 
-            args = []
-            if spec.args is not None:
-                args = spec.args
+            if defaults is None:
+                defaults = []
 
-            defaults = []
-            if spec.defaults is not None:
-                defaults = spec.defaults
-
+            self.min_args = len(args) - len(defaults)
             # If there are no variable length arguments
-            if spec.varargs is None and spec.keywords is None:
+            if spec.varargs is None:
                 self.max_args = len(args)
-                self.min_args = len(args) - len(defaults)
             else:
                 self.max_args = None
-                self.min_args = len(args) - len(defaults)
         else:
             # No setup function means min an max args are both 0
             self.max_args = 0
@@ -41,35 +43,30 @@ class SketchRunner:
 
         # Register library imports into sketch
         for item in imports:
-            self.__register_library(item[0], item[1])
+            self.__register_library(*item)
 
-    def __register_library(self, module_name: str, attr: str):
+    def __register_library(self, module_name: str, attr: str, fallback: str = None):
         """Inserts Interpreter Library of imports into sketch in a very non-consensual way"""
 
         # Import the module Named in the string
         try:
             module = importlib.import_module(module_name)
 
-        # Hardcoded GPIO Hack
-        # If module is not found it checks if it is the RPi.GPIO module. (Not available on PC's)
-        # If it is then it substitutes it for a fake stub version, just so that the code can run
+        # If module is not found it checks if an alternative is is listed
+        # If it is then it substitutes it, just so that the code can run
         except ImportError:
-            if module_name == "RPi.GPIO":
-                from sketches import fakeGPIO
-                module = fakeGPIO
-                print("\nRPi.GPIO not available, you may not be running on a Pi compatible device."
-                      "\nGPIO functions have been masked with stubs, so sketches can continue to function.\n")
+            if fallback is not None:
+                module = importlib.import_module(fallback)
+                print(module_name + " not available: Replaced with " + fallback)
             else:
-            # If the module is not GPIO raise the import error, after all the user just tried to load a module that
-            # Doesn't exist.
-                raise
+                print(module_name + " not available: No Replacement Specified")
 
         # Cram the module into the __sketch in the form of module -> "attr"
         # AKA the same as `import module as attr`
         if not attr in dir(self.__sketch):
             setattr(self.__sketch, attr, module)
         else:
-            print("\n"+ attr +" could not be imported as it's label is already used in the sketch")
+            print(attr +" could not be imported as it's label is already used in the sketch")
 
     def run(self, args):
         # Try to execute setup function if it doesn't exist no one cares, just run the loop.
@@ -92,21 +89,6 @@ class SketchRunner:
             # Try to call cleanup. If it doesn't exist move along.
             if 'cleanup' in dir(self.__sketch):
                 self.__sketch.cleanup()
-
-
-def module_loader(filename):
-    module_path = path.abspath(filename)
-
-    # Check file exists and is valid
-    if not path.isfile(module_path):
-        raise FileNotFoundError
-
-    # Catching errors here appears to be impossible, as the inner engine throws it ignoring a try/catch
-    # So let it throw them, as it spits useful information to the user anyway
-    try:
-        return importlib.machinery.SourceFileLoader("sketch", module_path).load_module()
-    except:
-        raise ImportError
 
 
 def main():
@@ -142,11 +124,10 @@ def main():
 		
         print("Loading " + filename)
         try:
-            sketch = module_loader(filename)
+            runner = SketchRunner(filename)
         except FileNotFoundError:
             exit("Could not load " + filename)
-
-        runner = SketchRunner(sketch=sketch)
+        
         #Check Argument Count (to sketch)
         if len(params) < runner.min_args:
             exit("Insufficient Arguments Supplied: Exiting")
