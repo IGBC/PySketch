@@ -1,15 +1,18 @@
 import inspect
+import logging
 import importlib
 from os import path
 from sys import argv
 from types import ModuleType
 from typing import List, Tuple
 
+__version__ = '1.0rc1'
 
 class SketchRunner:
     __default_package_list = [('sys', 'sys'), ('time', 'time'), ('math', 'math'), ('RPi.GPIO', 'GPIO','sketches.fakeGPIO')]
 
     def __init__(self, filename: str, imports: List[Tuple[str, str]] = __default_package_list):
+        self.__logger = logging.getLogger('sketches.SketchRunner')
         module_path = path.abspath(filename)
 
         # Check file exists and is valid
@@ -57,16 +60,16 @@ class SketchRunner:
         except ImportError:
             if fallback is not None:
                 module = importlib.import_module(fallback)
-                print(module_name + " not available: Replaced with " + fallback)
+                self.__logger.warn(module_name + " not available: Replaced with " + fallback)
             else:
-                print(module_name + " not available: No Replacement Specified")
+                self.__logger.warn(module_name + " not available: No Replacement Specified")
 
         # Cram the module into the __sketch in the form of module -> "attr"
         # AKA the same as `import module as attr`
         if not attr in dir(self.__sketch):
             setattr(self.__sketch, attr, module)
         else:
-            print(attr +" could not be imported as it's label is already used in the sketch")
+            self.__logger.warn(attr +" could not be imported as it's label is already used in the sketch")
 
     def run(self, args):
         # Try to execute setup function if it doesn't exist no one cares, just run the loop.
@@ -105,7 +108,7 @@ def main():
                 '\n'
                 'Add "#!/usr/bin/env pysketch" to a sketchfile make it callable'
                )
-
+    
     args = argv[1:]
     # Check a sketch is listed
     if len(args) == 0:
@@ -115,25 +118,30 @@ def main():
         print(helptext)
 
     elif "--version" in args:
-        print("TODO: Read Version" + " pre-alpha")
+        print(__version__)
 
     else:
+        # Set up logger
+        logger = logging.getLogger('sketches')
+        ch = logging.StreamHandler()
+        formatter = logging.Formatter('[%(levelname)s]: %(message)s')
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+        
         # Load File
         filename = args[0]
         params = args[1:]
 		
-        print("Loading " + filename)
         try:
             runner = SketchRunner(filename)
         except FileNotFoundError:
-            exit("Could not load " + filename)
+            exit("[FATAL]: Could not load " + filename)
         
         #Check Argument Count (to sketch)
         if len(params) < runner.min_args:
-            exit("Insufficient Arguments Supplied: Exiting")
+            exit("[FATAL]: Insufficient Arguments Supplied: Exiting")
         if len(params) > runner.max_args:
-            exit("Excess Arguments Supplied: Exiting")
+            exit("[FATAL]: Excess Arguments Supplied: Exiting")
         # Run
-        print("Running Sketch:")
         runner.run(params)
 

@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
 
+from sketches import __version__
 
 setup(
     name='sketches',
-    version='0.0.2',
+    version=__version__,
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
     entry_points = {
         'console_scripts': ['pysketch=sketches:main'],
