@@ -3,7 +3,6 @@ import logging
 import importlib
 from os import path
 from sys import argv
-from types import ModuleType
 from typing import List, Tuple
 
 __version__ = '1.0rc1'
@@ -106,7 +105,7 @@ def main():
                 '  --help    Show this screen.\n'
                 '  --version     Show version.\n'
                 '\n'
-                'Add "#!/usr/bin/env pysketch" to a sketchfile make it callable'
+                'Add "#!/usr/bin/env pysketch" to a sketchfile and make it executable to run from the shell'
                )
     
     args = argv[1:]
