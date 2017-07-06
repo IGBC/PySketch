@@ -1,8 +1,9 @@
 #!/usr/bin/env pysketch
+from typing import List
 
 sys = 0
 
-def setup(arg):
+def setup(a:str, b:float, c, d:int = 4):
     print("setup("+arg+")")
     print(dir())
 

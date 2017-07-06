@@ -70,6 +70,22 @@ class SketchRunner:
         else:
             self.__logger.warn(attr +" could not be imported as it's label is already used in the sketch")
 
+    def cast_args(self, args):
+        """Trys to cast arguments provided to the types listed in the setup() annotations"""
+        if 'setup' in dir(self.__sketch):
+            # Get argspec
+            spec = inspect.getfullargspec(self.__sketch.setup)
+            arglist = spec.args # We can't do anything about varargs
+            for i in range(0, min(len(args),len(arglist))): # Iterate over everything in both lists
+                if arglist[i] in spec.annotations:
+                    argtype = spec.annotations[arglist[i]]
+                    try:
+                        args[i] = argtype(args[i]) # cast arg to type in spec
+                    except Exception as e:
+                        self.__logger.fatal("Argument %i %s: \"%s\" could not be converted to %s (%s)" % (i + 1, arglist[i], args[i], str(argtype), e.errno))
+                        raise
+        return args
+
     def run(self, args):
         # Try to execute setup function if it doesn't exist no one cares, just run the loop.
         if 'setup' in dir(self.__sketch):
