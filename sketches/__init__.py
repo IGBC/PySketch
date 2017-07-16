@@ -82,7 +82,7 @@ class SketchRunner:
                     try:
                         args[i] = argtype(args[i]) # cast arg to type in spec
                     except Exception as e:
-                        self.__logger.fatal("Argument %i %s: \"%s\" could not be converted to %s (%s)" % (i + 1, arglist[i], args[i], str(argtype), e.errno))
+                        self.__logger.fatal("Argument {} {}: \"{}\" could not be converted to {} ({})".format(i + 1, arglist[i], args[i], argtype, e.__doc__))
                         raise
         return args
 
@@ -146,7 +146,7 @@ def main():
         # Load File
         filename = args[0]
         params = args[1:]
-		
+
         try:
             runner = SketchRunner(filename)
         except FileNotFoundError:
@@ -157,6 +157,12 @@ def main():
             exit("[FATAL]: Insufficient Arguments Supplied: Exiting")
         if len(params) > runner.max_args:
             exit("[FATAL]: Excess Arguments Supplied: Exiting")
-        # Run
-        runner.run(params)
 
+        try:
+            params = runner.cast_args(params)
+        except:
+            exit()
+
+        # Run
+        print("Running")
+        runner.run(params)
