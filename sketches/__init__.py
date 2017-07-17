@@ -1,47 +1,38 @@
-import inspect
 import logging
 import importlib
+import argparse
 from os import path
 from sys import argv
 from typing import List, Tuple
 
-__version__ = '1.0rc1'
+__version__ = '1.1beta1'
 
 class SketchRunner:
     __default_package_list = [('sys', 'sys'), ('time', 'time'), ('math', 'math'), ('RPi.GPIO', 'GPIO','sketches.fakeGPIO')]
 
     def __init__(self, filename: str, imports: List[Tuple[str, str]] = __default_package_list):
         self.__logger = logging.getLogger('sketches.SketchRunner')
+        self.__filename = filename
         module_path = path.abspath(filename)
 
         # Check file exists and is valid
         if not path.isfile(module_path):
+            self.__logger.fatal("Could not load '{}': file not found".format(module_path))
             raise FileNotFoundError
 
         self.__sketch = importlib.machinery.SourceFileLoader("sketch", module_path).load_module()
         
-        # get setup function and argument count
+        self.__parser = argparse.ArgumentParser();
+        self.__parser.add_argument(filename, help="This sketchfile")
+        
+        # Read setup() annotations and give them to argparse
         if 'setup' in dir(self.__sketch):
-            spec = inspect.getfullargspec(self.__sketch.setup)
-            args = spec.args
-            defaults = spec.defaults
-            
-            if args is None:
-                args = []
-
-            if defaults is None:
-                defaults = []
-
-            self.min_args = len(args) - len(defaults)
-            # If there are no variable length arguments
-            if spec.varargs is None:
-                self.max_args = len(args)
-            else:
-                self.max_args = None
-        else:
-            # No setup function means min an max args are both 0
-            self.max_args = 0
-            self.min_args = 0
+            fun = self.__sketch.setup
+            args = fun.__code__.co_varnames[:fun.__code__.co_argcount]
+            for n in args:
+                defaults = { n: v for n, v in zip(reversed(args), reversed(fun.__defaults__)) }
+                self.__parser.add_argument(n, type=fun.__annotations__.get(n,str), nargs=('?' if n in defaults else None),
+                                           default=defaults.get(n), help=("(default: %(default)s)" if n in defaults else ""))
 
         # Register library imports into sketch
         for item in imports:
@@ -70,26 +61,13 @@ class SketchRunner:
         else:
             self.__logger.warn(attr +" could not be imported as it's label is already used in the sketch")
 
-    def cast_args(self, args):
-        """Trys to cast arguments provided to the types listed in the setup() annotations"""
-        if 'setup' in dir(self.__sketch):
-            # Get argspec
-            spec = inspect.getfullargspec(self.__sketch.setup)
-            arglist = spec.args # We can't do anything about varargs
-            for i in range(0, min(len(args),len(arglist))): # Iterate over everything in both lists
-                if arglist[i] in spec.annotations:
-                    argtype = spec.annotations[arglist[i]]
-                    try:
-                        args[i] = argtype(args[i]) # cast arg to type in spec
-                    except Exception as e:
-                        self.__logger.fatal("Argument {} {}: \"{}\" could not be converted to {} ({})".format(i + 1, arglist[i], args[i], argtype, e.__doc__))
-                        raise
-        return args
-
     def run(self, args):
         # Try to execute setup function if it doesn't exist no one cares, just run the loop.
         if 'setup' in dir(self.__sketch):
-            self.__sketch.setup(*args)
+            # Get argparse wrapper for setup
+            params = self.__parser.parse_args([self.__filename] + args).__dict__
+            params.pop(self.__filename)
+            self.__sketch.setup(**params)
         try:
             if 'loop' in dir(self.__sketch):
                 while True:
@@ -110,59 +88,23 @@ class SketchRunner:
 
 
 def main():
-    helptext = ('PySketch - Write easy sketches in python.\n'
-                '\n'
-                'Usage:\n'
-                '  pysketch (sketchfile) [sketch arguments]\n'
-                '  pysketch --help\n'
-                '  pysketch --version\n'
-                '\n'
-                'Options:\n'
-                '  --help    Show this screen.\n'
-                '  --version     Show version.\n'
-                '\n'
-                'Add "#!/usr/bin/env pysketch" to a sketchfile and make it executable to run from the shell'
-               )
+    parser = argparse.ArgumentParser(description='PySketch - Write easy sketches in python.\n'
+                                                 'Add "#!/usr/bin/env pysketch" to a sketchfile and make it executable to run from the shell')
+    parser.add_argument('sketchfile', type=str, help="file to load and execute")
+    parser.add_argument('sketch arguments', nargs=argparse.REMAINDER, help="arguments to the sketch")
+    parser.add_argument('-v, --version', action='version', version=__version__)
+    # Set up logger
+    logger = logging.getLogger('sketches')
+    ch = logging.StreamHandler()
+    formatter = logging.Formatter('[%(levelname)s]: %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
     
-    args = argv[1:]
-    # Check a sketch is listed
-    if len(args) == 0:
-        print(helptext)
+    args = parser.parse_args().__dict__
+    try:
+        runner = SketchRunner(args['sketchfile'])
+    except:
+        exit()
+    
+    runner.run(args['sketch arguments'])
 
-    elif "--help" in args:
-        print(helptext)
-
-    elif "--version" in args:
-        print(__version__)
-
-    else:
-        # Set up logger
-        logger = logging.getLogger('sketches')
-        ch = logging.StreamHandler()
-        formatter = logging.Formatter('[%(levelname)s]: %(message)s')
-        ch.setFormatter(formatter)
-        logger.addHandler(ch)
-        
-        # Load File
-        filename = args[0]
-        params = args[1:]
-
-        try:
-            runner = SketchRunner(filename)
-        except FileNotFoundError:
-            exit("[FATAL]: Could not load " + filename)
-        
-        #Check Argument Count (to sketch)
-        if len(params) < runner.min_args:
-            exit("[FATAL]: Insufficient Arguments Supplied: Exiting")
-        if len(params) > runner.max_args:
-            exit("[FATAL]: Excess Arguments Supplied: Exiting")
-
-        try:
-            params = runner.cast_args(params)
-        except:
-            exit()
-
-        # Run
-        print("Running")
-        runner.run(params)
