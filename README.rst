@@ -14,10 +14,11 @@ Features
 --------
 
 * **Write low overhead sketch files:** For a functioning sketch you only have to define the interpreter and at one of `setup()`, `loop()`, or `cleanup()` and you're ready to code.
-* **Automatic imports:** Sketches will automatically import a selection of commonly used libraries at runtime, meaning you don't have to worry about your import statements.
-* **Argument Preparsing:** Sketches will before running your code check the input arguments to ensure the right number of arguments are passed to your script, so you don't have to write code to check they're all there. Simply define the arguments you want as the parameters of your `setup()` function.
-* **Clean crashing:** When your code is stopped by user interupt, or otherwise crashes `cleanup()` is run, giving you the opportunity to safely end your program.
+* **Automatic Imports:** Sketches will automatically import a selection of commonly used libraries at runtime, meaning you don't have to worry about your import statements.
+* **Argument Preparsing:** Sketches will check the input arguments to your script, and cast them automatically, so you don't have to write code to check they're all there. Simply define the arguments you want as the parameters of your `setup()` function.
+* **Clean Crashing:** When your code is stopped by user interupt, or otherwise crashes `cleanup()` is run, giving you the opportunity to safely end your program.
 * **Error Reporting:** Errors your code throws are printed back to the terminal so you can see where it broke.
+* **Automatic Help Generation:** Pysketch reads the module's docstring and hints for the setup() function to provide automatic help text.
 
 Examples
 --------
@@ -28,10 +29,10 @@ The best way to demonstrate this is probably with an example. Read the comments 
 
     #!/usr/bin/pysketch
     
-    # Blinky.py - Sketch to blink an LED on an RPi
-    # This script assumes you have an LED connected from pin 12 to GND. (Via a resistor plz)
-    
-    def setup(argv): # This code is automatically executed when the sketch starts.
+    '''Blinky.py - Sketch to blink an LED on an RPi
+    This script assumes you have an LED connected from pin 18 to GND. (Via a resistor plz)'''
+
+    def setup(): # This code is automatically executed when the sketch starts.
         GPIO.setmode(GPIO.BCM) # The RPi.GPIO Library is automatically loaded in.
         GPIO.setup(18, GPIO.OUT) 
     
@@ -42,41 +43,13 @@ The best way to demonstrate this is probably with an example. Read the comments 
     def cleanup(): # This is called at the end, regardless of how loop() exits, even if it crashes.
         GPIO.cleanup()
 
-  
-Now look at the equivalent vanilla python:
-
-.. code:: python
-
-    #!/usr/bin/python3
-    
-    # Blinky.py - Script to blink an LED on an RPi
-    # This script assumes you have an LED connected from pin 12 to GND. (Via a resistor plz)
-    
-    import time
-    import RPi.GPIO as GPIO
-    
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(18, GPIO.OUT)
-    
-    try
-        while true:
-            GPIO.output(18, 1 - GPIO.input(18))
-            time.sleep(1)
-    except keyboardInterrupt:
-        print("Keyboard Interrupt: Exiting")
-    except:
-        raise
-    finally:
-        GPIO.cleanup()  
-
-(Ignoring comments and whitespace) The vanilla python script is 15 lines of code, the sketch is only 9. There are 5 lines of functional code in these programs, meaning in the sketch there is only 4 lines of boilerplate code, in the simple blink program there are 10*.
-
-*Ironically to eliminate those 10 lines the interpreter is over 120 lines long.
+This short and clear script will blink an LED. Pysketch takes care of error handling and most of the boring work, leaving just the functional parts of the program.
 
 Installation:
 -------------
 
-Sketches is packaged at PyPI (Python Package Index), so install it using `pip3`. This package is only provided for python 3 (3.4 officially supported)
+Sketches is packaged at PyPI (Python Package Index), so install it using `pip3`. This package is only provided for python 3 (3.6 officially supported).
+Sketches has no dependancies.
 
 Install:
 ``` bash
@@ -90,6 +63,8 @@ Add `#!/usr/bin/pysketch` to the top of your file, then run `./<filename> [args]
 
 Or run `pysketch <filename> [args]`
 
+See Sketch Formatting for information on how to write sketches. 
+
 Why?
 ----
 
@@ -99,3 +74,8 @@ In my day job I found myself writing a large number of scripts on the Raspberry 
 - on keyboard exception: clean up resources.
 
 I wondered if there was a framework to automate away a lot of the boilerplate. When I didn't find one I wrote a template python file. As that started to get long, I wrote Sketches.
+
+Licence
+-------
+GPL 3.0
+See LICENCE file for more information.

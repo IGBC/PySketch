@@ -5,7 +5,7 @@ from os import path
 from sys import argv
 from typing import List, Tuple
 
-__version__ = '1.1beta1'
+__version__ = '1.1rc1'
 
 class SketchRunner:
     __default_package_list = [('sys', 'sys'), ('time', 'time'), ('math', 'math'), ('RPi.GPIO', 'GPIO','sketches.fakeGPIO')]
