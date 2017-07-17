@@ -21,18 +21,21 @@ class SketchRunner:
             raise FileNotFoundError
 
         self.__sketch = importlib.machinery.SourceFileLoader("sketch", module_path).load_module()
-        
-        self.__parser = argparse.ArgumentParser();
+
+        self.__parser = argparse.ArgumentParser(description=self.__sketch.__doc__)
         self.__parser.add_argument(filename, help="This sketchfile")
-        
+
         # Read setup() annotations and give them to argparse
         if 'setup' in dir(self.__sketch):
             fun = self.__sketch.setup
             args = fun.__code__.co_varnames[:fun.__code__.co_argcount]
+            defaults = { n: v for n, v in zip(reversed(args), reversed(fun.__defaults__)) }
             for n in args:
-                defaults = { n: v for n, v in zip(reversed(args), reversed(fun.__defaults__)) }
-                self.__parser.add_argument(n, type=fun.__annotations__.get(n,str), nargs=('?' if n in defaults else None),
-                                           default=defaults.get(n), help=("(default: %(default)s)" if n in defaults else ""))
+                annotation = fun.__annotations__.get(n,str)
+                if not isinstance(annotation, (tuple, list)):
+                    annotation = (annotation, "")
+                helpstr = "{} {} {}".format(annotation[1],annotation[0], " (default: %(default)s)" if n in defaults else "")
+                self.__parser.add_argument(n, type=annotation[0], nargs=('?' if n in defaults else None), default=defaults.get(n), help=helpstr)
 
         # Register library imports into sketch
         for item in imports:
@@ -99,12 +102,12 @@ def main():
     formatter = logging.Formatter('[%(levelname)s]: %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
-    
+
     args = parser.parse_args().__dict__
     try:
         runner = SketchRunner(args['sketchfile'])
-    except:
+    except FileNotFoundError:
         exit()
-    
+
     runner.run(args['sketch arguments'])
 
